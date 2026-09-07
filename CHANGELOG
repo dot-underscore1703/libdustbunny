@@ -1,0 +1,4 @@
+# Libdustbunny changelog
+## 0.1.0
+- Initial libdustbunny release.
+- Implementing a tokens type, a nodes type, debug macro and version information.
