@@ -1,0 +1,4 @@
+Add features to library as the dustbunny shell requires them.
+Confirm token and node types work as intended, and are memory safe and efficient.
+Config file parser
+Custom input handler
