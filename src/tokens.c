@@ -26,25 +26,32 @@ typedef struct Token {
 /// Create new token
 Token *token_new(TokenType type, char *value) {
 	size_t token_size = sizeof(Token);
+	
 	dustbunny_debug("creating new token with size of %zu",token_size);
-	Token *t = malloc(sizeof(Token));
+	Token *new_token = malloc(sizeof(Token));
 
-	if(!t) {
+	if(!new_token) {
 		dustbunny_debug("failed to allocate space for token");
 		return NULL;
 	}
-	t->type = type;
-	t->value = value ? strdup(value) : NULL;
-	return t;
+
+	// Token type is important so the parser knows how to use the token when constructing the AST
+	new_token->type = type;
+
+	new_token->value = value ? strdup(value) : NULL;
+	return new_token;
 }
 
 /// Destroy the token at the pointer.
 void token_destroy(Token *token) {
 	dustbunny_debug("destroying token");
+	
 	if(!token){
 		dustbunny_debug("...but nobody came");
 		return;
 	};
+
+	// We free the value first instead of just freeing the token so we arent left with a variable lacking a pointer.
 	free(token->value);
 	free(token);
 }
@@ -52,16 +59,19 @@ void token_destroy(Token *token) {
 /// Get the value of the Token* passed to the function.
 char *token_get_value(Token *token) {
 	dustbunny_debug("getting token value");
+	
 	if(!token){
 		dustbunny_debug("...but nobody came");
 		return NULL;
 	}
+	
 	return token->value;
 }
 
 /// Get the type of the Token* passed to the function, returns TokenUnknown if the token does not exist.
 TokenType token_get_type(Token *token) {
 	dustbunny_debug("getting token type");
+	
 	if(!token){
 		dustbunny_debug("...but nobody came");
 		return TokenUnknown;
