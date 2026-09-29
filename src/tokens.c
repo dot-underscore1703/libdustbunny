@@ -23,7 +23,7 @@ typedef struct Token {
   char *value;
 } Token;
 
-
+/// Create new token
 Token *token_new(TokenType type, char *value) {
 	size_t token_size = sizeof(Token);
 	dustbunny_debug("creating new token with size of %zu",token_size);
