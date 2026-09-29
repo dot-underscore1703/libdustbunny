@@ -2,32 +2,27 @@
 // NODES.C - NO D'E TREE
 // =====================
 
+// Coming from Github? The documentation for the functions and types declared in this file is in docs/Nodes.md
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "libdustbunny/debug.h"
 
-// This should be the maximum amount of children one node can have (excluding the root node), as I am not aware of any shell operation that exceeds that limit
-#define MAX_CHILDREN 2
+#define MAX_CHILDREN 128 // Will decrease when reallocation is implemented for nodes
 
 /// Types for nodes. Each node has a type, which tells the interpreter how to use it and its children.
 typedef enum NodeType {
-	Root,				// The root of the AST
-	
-	// Text nodes carry strings of data.
-	// This data is usually commands.
-	// It should have no children, and should instead use the Nodes value string to store its text.
-	Text,				// Any text. Commands, filepaths etc
-	Command,			// e.g 'gcc -c mylib.c'
-	File,				// e.g 'cat ~/.bashrc'
+	Root,	
+	Command, 
+	Arg,				// echo
+	File,
+	Pipe,				// |
+	RedirectTo,			// >
+	RedirectFrom,		// <
 
-	// Pipe nodes indicate that the output of the command(s) on the left side of the pipe should be sent to the input of the command(s) of the left side of the pipe.
-	// They s 
-	Pipe,				// e.g 'ls | grep "o.txt"'
-	RedirectTo,			// e.g 'ls > my_files.txt'
-	RedirectFrom,		// e.g 'cat < my_files.txt'
-	SendToBackground,	// e.g 'firefox &'
-	ExecuteOnSuccess,	// e.g 'gcc main.c -o a.out && ./a.out'
-	ExecuteOnFailure	// e.g 'gcc main.c -o a.out || echo "compilation failed"'
+	SendToBackground,	// &
+	ExecuteOnSuccess,	// &&
+	ExecuteOnFailure	// ||
 } NodeType;
 
 /// The node type. The AST node tree is comprised of these types. Every node should have a parent except for the Root node, and every node should have a child except for the Text node.
@@ -45,136 +40,121 @@ typedef struct Node {
 
 /// Create a new node with the node type and its value, if applicable.
 Node *node_new(NodeType type, char *value) {
-	// Get node size and allocate memory for a new node.
-	size_t node_size	= sizeof(Node);
-	DUSTBUNNY_DEBUG("creating new node with size of %zu",node_size);
-	Node *node			= malloc(node_size);
+	size_t node_size = sizeof(Node);
+	
+	dustbunny_debug("creating new node with size of %zu",node_size);
+	Node *node = malloc(node_size);
 
-	// Make sure malloc() was succesfull.
 	if(!node){
-		// malloc() returned NULL.
-		DUSTBUNNY_DEBUG("failed to allocate space for node");
+		// no memory left, you're probably fucked
+		dustbunny_debug("failed to allocate space for node");
 		return NULL;
 	}
 
-	// Set the nodes fields to the appropriate values provided by the function params
 	node->type 	= type;
 	node->value = value;
 	
-	// Create a temporary variable for the nodes children pointers
+	// to be assigned to node->children
 	Node **tmp_children = malloc(sizeof(Node*) * MAX_CHILDREN);
 
-	// Make sure malloc() was successful.
+	// We made a temporary so we can do this check before assigning to the node
 	if(!tmp_children){
-		// Temporary variable allocation failed
-		DUSTBUNNY_DEBUG("failed to allocate space for node children");
+		dustbunny_debug("failed to allocate space for node children");
 		return NULL;
 	}
 
-	// Temporary variable was created correctly, assign it to the node.
+	// We dont need the temporary after the check, since it succeeded we can give it to the node and get rid of the pointer.
 	node->children = tmp_children;
-
-	// Then free the temporary variable
-	free(tmp_children);
-	
-	// And nullify the pointer.
 	tmp_children = NULL;
 
-	// Return the node we created.
 	return node;
 }
 
 /// Destroy the node at the provided pointer and free its fields.
-void node_destroy(Node *node) {
-	DUSTBUNNY_DEBUG("destroying node");
+int node_destroy(Node *node) {
+	dustbunny_debug("destroying node");
 
-	// Check that the node we are trying to destroy actually exists.
+	// hopefully the node we a are destroying actually exists.
 	if(!node){
-		// It doesn't exist, exit.
-		DUSTBUNNY_DEBUG("...but nobody came");
-		return;
+		dustbunny_debug("...but nobody came");
+		return 1;
 	}
 
 	// === I haven't checked that this works yet, its a bit confusing ;-; but it'll be fixed ===
 	
-	// Free the nodes fields before freeing the node itself.
+	// Free the fields first so we dont get dangly variables with no pointer causing a memory leak
 	free(&node->type);
 	free(node->value);
 
-	// Loop over each child and destroy the children.
+	// there is probably a better way to do this but iteratively should work for now.
 	for(size_t i = 0; i < node->children_amt; ++i) {
-		node_destroy(node->children[i]);
+		if(node_destroy(node->children[i]) == 1){
+			dustbunny_debug("failed to destroy child, %i",i);
+		}
 	}
 
 	// The root node shouldn't be destroyed so hopefully this works.
 
-	// Destroy the parent nodes pointer to this node
-	node->
-		parent->
-			children[node->parent_idx] = NULL;
+	node->parent->children[
+		node->parent_idx
+	] = NULL; // parent_idx should hold where the pointer is in the parents children field
 
-	// Decrement the parents amount of children.
-	--node->
-		parent->
-			children_amt;
+	--node->parent->children_amt;
 
-	// Nullify the parent pointer.
-	node->
-		parent = NULL;
+	node->parent = NULL;
 
-	// Free the node
+	// we are done
 	free(node);
+	
+	return 0;
 }
 
 /// Add the child node provided to the parent nodes children.
-void node_adopt(Node *parent, Node *child) {
-	DUSTBUNNY_DEBUG("adopting node");
+int node_adopt(Node *parent, Node *child) {
+	dustbunny_debug("adopting node");
 
 	// We want to know both the child and parent actually exist.
 	if(!parent) {
-		// The parent does not exist, exit.
-		DUSTBUNNY_DEBUG("the parent is null");
-		return;
+		dustbunny_debug("the parent is null");
+		return 1;
 	}
 	if(!child) {
-		// The child does not exist, exit.
-		DUSTBUNNY_DEBUG("the child is null");
-		return;
+		dustbunny_debug("the child is null");
+		return 2;
 	}
 
 	// This code is really funny, and probably not that good.
 
-	// Add the child to the parents children field
-	parent->
-		children[parent->children_amt] = child;
+	// most of this is smelly pointer work (EWWW) and just counters.
+	// bare with me here, cant wait to have to find the segfault that only happens once in a blue moon
+	parent->children[
+		parent->children_amt
+	] = child; // give the parent a pointer to the child so the parent can identify its children in parsing
 		
-	// Set the childs parent field to the parent pointer
-	child->
-		parent = parent;
+	child->parent = parent; // give the child a pointer to the parent so the child can modify the parent if needed (like when disowning)
 	
-	// Set the childs parent_idx field to the position it was placed at in the parents children.
-	child->
-		parent_idx = parent->children_amt++;
+	
+	child->parent_idx = parent->children_amt++; // the child has to store WHERE it is. This will also increment the parents children_amt field for the next child that will be adopted.
 
-	return;  
+	return 0;  
 }
 
 /// Disown the child provided from the parent node. The parent node will be found automatically, so no need to provide a pointer to one.
-void node_disown(Node *child) {
-	// Nullify the parents pointer to the child 
-	child->
-		parent->
-			children[child->
-						parent->
-							children_amt] = NULL;
+int node_disown(Node *child) {
+	dustbunny_debug("disowning node");
 
-	// Decrement the parents children_amt counter
-	--child->	
-		parent->
-			children_amt;
+	if(!child){
+		dustbunny_debug("the child does not exist");
+		return 1;
+	}
+ 
+	child->parent->children[
+		child->parent->children_amt
+	] = NULL;
 
-	// Nullify the pointer to the parent.
+	--child->parent->children_amt;
+
 	child->parent = NULL;
-	return;
+	return 0;
 }
 
