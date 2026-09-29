@@ -26,11 +26,11 @@ typedef struct Token {
 
 Token *token_new(TokenType type, char *value) {
 	size_t token_size = sizeof(Token);
-	DUSTBUNNY_DEBUG("creating new token with size of %zu",token_size);
+	dustbunny_debug("creating new token with size of %zu",token_size);
 	Token *t = malloc(sizeof(Token));
 
 	if(!t) {
-		DUSTBUNNY_DEBUG("failed to allocate space for token");
+		dustbunny_debug("failed to allocate space for token");
 		return NULL;
 	}
 	t->type = type;
@@ -38,10 +38,11 @@ Token *token_new(TokenType type, char *value) {
 	return t;
 }
 
+/// Destroy the token at the pointer.
 void token_destroy(Token *token) {
-	DUSTBUNNY_DEBUG("destroying token");
+	dustbunny_debug("destroying token");
 	if(!token){
-		DUSTBUNNY_DEBUG("...but nobody came");
+		dustbunny_debug("...but nobody came");
 		return;
 	};
 	free(token->value);
@@ -50,9 +51,9 @@ void token_destroy(Token *token) {
 
 /// Get the value of the Token* passed to the function.
 char *token_get_value(Token *token) {
-	DUSTBUNNY_DEBUG("getting token value");
+	dustbunny_debug("getting token value");
 	if(!token){
-		DUSTBUNNY_DEBUG("...but nobody came");
+		dustbunny_debug("...but nobody came");
 		return NULL;
 	}
 	return token->value;
@@ -60,9 +61,9 @@ char *token_get_value(Token *token) {
 
 /// Get the type of the Token* passed to the function, returns TokenUnknown if the token does not exist.
 TokenType token_get_type(Token *token) {
-	DUSTBUNNY_DEBUG("getting token type");
+	dustbunny_debug("getting token type");
 	if(!token){
-		DUSTBUNNY_DEBUG("...but nobody came");
+		dustbunny_debug("...but nobody came");
 		return TokenUnknown;
 	}
 	return token->type;
@@ -70,7 +71,7 @@ TokenType token_get_type(Token *token) {
 
 /// Get the type of the Token* passed to the function as a string. Useful for debugging.
 char *token_type_as_str(Token *token){
-		DUSTBUNNY_DEBUG("getting token type as string");
+		dustbunny_debug("getting token type as string");
 		switch(token_get_type(token)){
 			case TokenText: return "TokenText";
 			case TokenNewline: return "TokenNewline";
