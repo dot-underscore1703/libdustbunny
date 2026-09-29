@@ -1,11 +1,11 @@
 # Debug Documentation
 ## DUSTBUNNY_DEBUG
 ```c
-#define DUSTBUNNY_DEBUG(fmt, ...) printf("dustbunny: DEBUG: " fmt "\n", ##__VA_ARGS__);
+void dustbunny_debug(char *fmt, ...);
 ```
-A macro for debugging functions.
+A function for debugging.
 Will check the `is_debug` variable in the debug header file, if it is 1, it will print the text, will not otherwise.
-Should be the same as printf usage-wise.
+Should be similar to printf usage-wise.
 ## is_debug
 ```c
 int is_debug;
