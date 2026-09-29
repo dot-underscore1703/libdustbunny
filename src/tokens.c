@@ -43,17 +43,19 @@ Token *token_new(TokenType type, char *value) {
 }
 
 /// Destroy the token at the pointer.
-void token_destroy(Token *token) {
+int token_destroy(Token *token) {
 	dustbunny_debug("destroying token");
 	
 	if(!token){
 		dustbunny_debug("...but nobody came");
-		return;
+		return 1;
 	};
 
 	// We free the value first instead of just freeing the token so we arent left with a variable lacking a pointer.
 	free(token->value);
 	free(token);
+	
+	return 0;
 }
 
 /// Get the value of the Token* passed to the function.
