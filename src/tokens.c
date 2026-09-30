@@ -58,17 +58,28 @@ int token_destroy(Token *token) {
 }
 
 /// Get the type of the Token* passed to the function as a string. Useful for debugging.
-char *token_type_as_str(Token *token){
+char* token_type_as_str(char *buffer, size_t buffer_len, Token *token){
 		dustbunny_debug("getting token type as string");
-		switch(token->type){
-			case TokenText: return "TokenText";
-			case TokenNewline: return "TokenNewline";
-			case TokenPipe: return "TokenPipe";
-			case TokenBracketIn: return "TokenBracketIn";
-			case TokenBracketOut: return "TokenBracketOut";
-			case TokenEquals: return "TokenEquals";
-			case TokenAmpersand: return "TokenAmpersand";
-			default: return "TokenUnknown";
+
+		// we dont malloc our own string here because if the user doesnt allocate it, they shouldnt be responsible for freeing it either
+		// so we use the two params buffer and buffer_len
+
+		if(buffer_len < 15) {
+			dustbunny_debug("buffer size not large enough to hold string");
+			return NULL;
 		}
 		
+		switch(token->type){
+			case TokenText: strcpy(buffer, "TokenText"); break;
+			case TokenNewline: strcpy(buffer, "TokenNewline"); break;
+			case TokenPipe: strcpy(buffer, "TokenPipe"); break;
+			case TokenBracketIn: strcpy(buffer, "TokenBracketIn"); break;
+			case TokenBracketOut: strcpy(buffer, "TokenBracketOut"); break;
+			case TokenEquals: strcpy(buffer, "TokenEquals"); break;
+			case TokenAmpersand: strcpy(buffer, "TokenAmpersand"); break;
+			default: strcpy(buffer,"TokenUnknown"); break;
+		}
+
+		dustbunny_debug("concluded token type as %s",buffer);
+		return buffer;
 }
