@@ -51,9 +51,8 @@ int token_destroy(Token *token) {
 		return 1;
 	};
 
-	// We free the value first instead of just freeing the token so we arent left with a variable lacking a pointer.
-	free(token->value);
 	free(token);
+	token = NULL;
 	
 	return 0;
 }
