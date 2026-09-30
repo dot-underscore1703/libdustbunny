@@ -57,33 +57,10 @@ int token_destroy(Token *token) {
 	return 0;
 }
 
-/// Get the value of the Token* passed to the function.
-char *token_get_value(Token *token) {
-	dustbunny_debug("getting token value");
-	
-	if(!token){
-		dustbunny_debug("...but nobody came");
-		return NULL;
-	}
-	
-	return token->value;
-}
-
-/// Get the type of the Token* passed to the function, returns TokenUnknown if the token does not exist.
-TokenType token_get_type(Token *token) {
-	dustbunny_debug("getting token type");
-	
-	if(!token){
-		dustbunny_debug("...but nobody came");
-		return TokenUnknown;
-	}
-	return token->type;
-}
-
 /// Get the type of the Token* passed to the function as a string. Useful for debugging.
 char *token_type_as_str(Token *token){
 		dustbunny_debug("getting token type as string");
-		switch(token_get_type(token)){
+		switch(token->type){
 			case TokenText: return "TokenText";
 			case TokenNewline: return "TokenNewline";
 			case TokenPipe: return "TokenPipe";
@@ -93,4 +70,5 @@ char *token_type_as_str(Token *token){
 			case TokenAmpersand: return "TokenAmpersand";
 			default: return "TokenUnknown";
 		}
+		
 }
