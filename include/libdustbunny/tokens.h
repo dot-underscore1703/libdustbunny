@@ -1,6 +1,8 @@
 #ifndef TOKENS_H
 #define TOKENS_H
 
+#include <stdlib.h>
+
 typedef enum { 
 	TokenText, 
 	TokenNewline, 
@@ -17,5 +19,10 @@ typedef struct Token {
   char *value;
 } Token;
 
+Token *token_new(TokenType type, char *value);
+
+int token_destroy(Token *token);
+
+char* token_type_as_str(char *buffer, size_t buffer_len, Token *token);
 
 #endif
